@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura Wireless Headphones</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F7F4EE;
+    --ink: #1A1814;
+    --ink-light: #6B6760;
+    --gold: #C9A84C;
+    --gold-light: #F0E4B8;
+    --white: #FFFFFF;
+    --border: #E4DFD5;
+    --success: #2D6A4F;
+    --success-bg: #EAF3EE;
+    --error: #8B2020;
+    --error-bg: #F8EEEE;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  /* ── HERO PRODUCT ── */
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 520px;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-visual {
+    background: linear-gradient(135deg, #1A1814 0%, #2E2B26 50%, #1A1814 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-visual::before {
+    content: '';
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.15);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .hero-visual::after {
+    content: '';
+    position: absolute;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.07);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .headphone-svg {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .hero-info {
+    padding: 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .product-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+  .product-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.6rem;
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+  .product-subtitle {
+    font-size: 1rem;
+    color: var(--ink-light);
+    margin-bottom: 1.5rem;
+    font-weight: 300;
+  }
+  .stars-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .stars { color: var(--gold); font-size: 1rem; letter-spacing: 2px; }
+  .rating-count { font-size: 0.85rem; color: var(--ink-light); }
+  .price {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+  }
+  .price-currency { font-size: 1.2rem; vertical-align: super; }
+  .product-features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  .feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--ink-light);
+  }
+  .feature-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+  .btn-primary {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--white);
+    padding: 0.85rem 2.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    width: fit-content;
+    transition: background 0.2s, transform 0.1s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-primary:hover { background: #333; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── COMMENTS SECTION ── */
+  .comments-section {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 3.5rem 2rem 4rem;
+  }
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--ink);
+  }
+  .comment-count {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── COMMENT FORM ── */
+  .comment-form {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    margin-bottom: 2.5rem;
+  }
+  .form-label {
+    display: block;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+  }
+  .rating-input {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    flex-direction: row-reverse;
+    width: fit-content;
+  }
+  .rating-input input { display: none; }
+  .rating-input label {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #D5D0C8;
+    transition: color 0.1s;
+  }
+  .rating-input label:hover,
+  .rating-input label:hover ~ label,
+  .rating-input input:checked ~ label { color: var(--gold); }
+
+  .name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .form-input {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--cream);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--gold); }
+  .form-textarea {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--cream);
+    resize: vertical;
+    min-height: 100px;
+    margin-bottom: 1.25rem;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-textarea:focus { border-color: var(--gold); }
+  .form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .api-note {
+    font-size: 0.75rem;
+    color: var(--ink-light);
+  }
+  .api-note span {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-right: 5px;
+    vertical-align: middle;
+  }
+
+  /* ── COMMENTS LIST ── */
+  .comment-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    animation: slideIn 0.35s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+  .comment-author-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .comment-meta { flex: 1; }
+  .comment-author { font-size: 0.9rem; font-weight: 500; color: var(--ink); }
+  .comment-date { font-size: 0.75rem; color: var(--ink-light); }
+  .comment-stars { color: var(--gold); font-size: 0.85rem; }
+  .comment-text {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+
+  /* ── AI REPLY ── */
+  .ai-reply {
+    border-radius: 8px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin-top: 0.5rem;
+  }
+  .ai-reply.positive { background: var(--success-bg); border-left: 2px solid var(--success); }
+  .ai-reply.negative { background: var(--error-bg); border-left: 2px solid var(--error); }
+  .ai-reply.neutral { background: var(--gold-light); border-left: 2px solid var(--gold); }
+  .ai-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .ai-icon svg { width: 12px; height: 12px; }
+  .ai-reply-content { flex: 1; }
+  .ai-reply-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    color: var(--ink-light);
+  }
+  .ai-reply-text { font-size: 0.85rem; line-height: 1.6; color: var(--ink); }
+
+  /* ── LOADING ── */
+  .ai-loading {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-light);
+    animation: pulse 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--ink-light);
+  }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ── API CONFIG ── */
+  .api-config {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    font-size: 0.8rem;
+    z-index: 200;
+    min-width: 240px;
+  }
+  .api-config-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+  .api-config-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .api-config-input {
+    flex: 1;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.78rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    color: var(--ink);
+    background: var(--cream);
+  }
+  .api-status {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    flex-shrink: 0;
+  }
+  .api-status.online { background: #2D6A4F; }
+  .api-status.offline { background: #8B2020; }
+
+  @media (max-width: 700px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-visual { min-height: 260px; }
+    .hero-info { padding: 2rem; }
+    .product-title { font-size: 2rem; }
+    .name-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="#">AURA</a>
+  <ul class="nav-links">
+    <li><a href="#">Audio</a></li>
+    <li><a href="#">Studio</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+</nav>
+
+<!-- PRODUCT HERO -->
+<section class="hero">
+  <div class="hero-visual">
+    <svg class="headphone-svg" width="220" height="220" viewBox="0 0 220 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M110 30 C65 30 30 65 30 110 L30 145 C30 155 38 163 48 163 L62 163 C72 163 80 155 80 145 L80 120 C80 110 72 102 62 102 L50 102 L50 110 C50 79 77 55 110 55 C143 55 170 79 170 110 L170 102 L158 102 C148 102 140 110 140 120 L140 145 C140 155 148 163 158 163 L172 163 C182 163 190 155 190 145 L190 110 C190 65 155 30 110 30 Z" fill="#C9A84C" opacity="0.9"/>
+      <rect x="32" y="110" width="26" height="52" rx="8" fill="#3A3530"/>
+      <rect x="162" y="110" width="26" height="52" rx="8" fill="#3A3530"/>
+      <path d="M52 136 C52 126 60 118 70 118 L70 162 C60 162 52 154 52 144 Z" fill="#C9A84C" opacity="0.4"/>
+      <path d="M168 136 C168 126 160 118 150 118 L150 162 C160 162 168 154 168 144 Z" fill="#C9A84C" opacity="0.4"/>
+      <circle cx="110" cy="105" r="4" fill="#C9A84C" opacity="0.6"/>
+    </svg>
+  </div>
+  <div class="hero-info">
+    <div class="product-tag">New Collection · 2026</div>
+    <h1 class="product-title">Aura Pro<br><em>Wireless</em></h1>
+    <p class="product-subtitle">Studio-grade sound. Featherlight design.</p>
+    <div class="stars-row">
+      <span class="stars">★★★★★</span>
+      <span class="rating-count" id="rating-count">0 reviews</span>
+    </div>
+    <div class="price"><span class="price-currency">$</span>349</div>
+    <div class="product-features">
+      <div class="feature"><span class="feature-dot"></span>40hr battery life</div>
+      <div class="feature"><span class="feature-dot"></span>Active noise cancel</div>
+      <div class="feature"><span class="feature-dot"></span>Hi-res audio</div>
+      <div class="feature"><span class="feature-dot"></span>Multipoint connect</div>
+    </div>
+    <button class="btn-primary">Add to Cart</button>
+  </div>
+</section>
+
+<!-- COMMENTS -->
+<section class="comments-section">
+  <div class="section-header">
+    <h2 class="section-title">Customer Reviews</h2>
+    <span class="comment-count" id="comment-count-label">Be the first to share your experience</span>
+  </div>
+
+  <!-- Form -->
+  <div class="comment-form">
+    <label class="form-label">Your Rating</label>
+    <div class="rating-input" id="rating-input">
+      <input type="radio" name="rating" id="s5" value="5"><label for="s5">★</label>
+      <input type="radio" name="rating" id="s4" value="4"><label for="s4">★</label>
+      <input type="radio" name="rating" id="s3" value="3" checked><label for="s3">★</label>
+      <input type="radio" name="rating" id="s2" value="2"><label for="s2">★</label>
+      <input type="radio" name="rating" id="s1" value="1"><label for="s1">★</label>
+    </div>
+
+    <div class="name-row">
+      <input class="form-input" type="text" id="input-name" placeholder="Your name" />
+      <input class="form-input" type="text" id="input-title" placeholder="Review title (optional)" />
+    </div>
+    <textarea class="form-textarea" id="input-comment" placeholder="Share your experience with the Aura Pro Wireless…"></textarea>
+
+    <div class="form-footer">
+      <div class="api-note">
+        <span></span>AI will respond to your comment
+      </div>
+      <button class="btn-primary" onclick="submitComment()">Post Review</button>
+    </div>
+  </div>
+
+  <!-- Comments list -->
+  <div id="comments-list">
+    <div class="empty-state">
+      <p>No reviews yet — yours could be the first.</p>
+    </div>
+  </div>
+</section>
+
+<!-- API Config widget -->
+<div class="api-config">
+  <div class="api-config-title">API Connection</div>
+  <div class="api-config-row">
+    <div class="api-status" id="api-status"></div>
+    <input class="api-config-input" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000" />
+  </div>
+</div>
+
+<script>
+const PRODUCT_NAME = "Aura Pro Wireless";
+const AVATAR_COLORS = [
+  {bg:'#EAF3EE', text:'#2D6A4F'},
+  {bg:'#EAF1FB', text:'#1A4D8F'},
+  {bg:'#F8EEEE', text:'#8B2020'},
+  {bg:'#F0E4B8', text:'#7A5C10'},
+  {bg:'#F3EAF5', text:'#6A2D8B'},
+];
+
+let comments = [];
+
+function getApiUrl() {
+  return document.getElementById('api-url').value.trim().replace(/\/$/, '');
+}
+
+async function checkApiStatus() {
+  const statusDot = document.getElementById('api-status');
+  try {
+    const res = await fetch(getApiUrl() + '/health', { signal: AbortSignal.timeout(3000) });
+    statusDot.className = 'api-status ' + (res.ok ? 'online' : 'offline');
+  } catch {
+    statusDot.className = 'api-status offline';
+  }
+}
+
+async function getAiReply(comment, rating) {
+  const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'mixed';
+  const prompt = `You are a warm, professional customer support representative for "${PRODUCT_NAME}", a premium wireless headphone.
+
+A customer just left this ${sentiment} review (${rating}/5 stars):
+"${comment}"
+
+Write a SHORT reply (2-3 sentences max) that:
+- Acknowledges their specific experience
+- If positive (4-5 stars): express genuine gratitude and share their excitement
+- If negative (1-2 stars): sincerely apologize and offer to help resolve the issue
+- If mixed (3 stars): acknowledge both positives and offer to improve their experience
+- Sound human, warm, and brand-appropriate. Do NOT use generic phrases like "We're sorry for any inconvenience."
+
+Reply directly without any prefix like "Reply:" or "Response:".`;
+
+  const res = await fetch(getApiUrl() + '/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 120,
+      temperature: 0.75
+    })
+  });
+
+  if (!res.ok) throw new Error('API error');
+  const data = await res.json();
+  return data.reply;
+}
+
+function getSentimentClass(rating) {
+  if (rating >= 4) return 'positive';
+  if (rating <= 2) return 'negative';
+  return 'neutral';
+}
+
+function getInitials(name) {
+  return name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+}
+
+function renderStars(n) {
+  return '★'.repeat(n) + '☆'.repeat(5 - n);
+}
+
+function formatDate() {
+  return new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function updateCounts() {
+  const n = comments.length;
+  document.getElementById('rating-count').textContent = n === 0 ? '0 reviews' : `${n} review${n !== 1 ? 's' : ''}`;
+  document.getElementById('comment-count-label').textContent = n === 0
+    ? 'Be the first to share your experience'
+    : `${n} review${n !== 1 ? 's' : ''}`;
+}
+
+function createCommentCard(c) {
+  const colorIdx = c.id % AVATAR_COLORS.length;
+  const col = AVATAR_COLORS[colorIdx];
+  const sentClass = getSentimentClass(c.rating);
+
+  const card = document.createElement('div');
+  card.className = 'comment-card';
+  card.id = 'comment-' + c.id;
+  card.innerHTML = `
+    <div class="comment-header">
+      <div class="comment-author-row">
+        <div class="avatar" style="background:${col.bg};color:${col.text}">${getInitials(c.name)}</div>
+        <div class="comment-meta">
+          <div class="comment-author">${c.name}</div>
+          <div class="comment-date">${c.date}</div>
+        </div>
+      </div>
+      <div class="comment-stars">${renderStars(c.rating)}</div>
+    </div>
+    ${c.title ? `<div style="font-weight:500;font-size:0.88rem;margin-bottom:0.5rem;">${c.title}</div>` : ''}
+    <p class="comment-text">${c.text}</p>
+    <div id="reply-${c.id}">
+      <div class="ai-reply ${sentClass}">
+        <div class="ai-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+          </svg>
+        </div>
+        <div class="ai-reply-content">
+          <div class="ai-reply-label">Aura Support · AI Response</div>
+          <div class="ai-loading">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+async function submitComment() {
+  const nameEl = document.getElementById('input-name');
+  const textEl = document.getElementById('input-comment');
+  const titleEl = document.getElementById('input-title');
+  const ratingEl = document.querySelector('input[name="rating"]:checked');
+
+  const name = nameEl.value.trim() || 'Anonymous';
+  const text = textEl.value.trim();
+  const rating = ratingEl ? parseInt(ratingEl.value) : 3;
+
+  if (!text) {
+    textEl.style.borderColor = '#8B2020';
+    textEl.focus();
+    setTimeout(() => textEl.style.borderColor = '', 1500);
+    return;
+  }
+
+  const comment = {
+    id: Date.now(),
+    name,
+    title: titleEl.value.trim(),
+    text,
+    rating,
+    date: formatDate(),
+  };
+
+  comments.unshift(comment);
+  updateCounts();
+
+  // Clear empty state
+  const list = document.getElementById('comments-list');
+  const empty = list.querySelector('.empty-state');
+  if (empty) empty.remove();
+
+  // Render card
+  const card = createCommentCard(comment);
+  list.insertBefore(card, list.firstChild);
+
+  // Reset form
+  nameEl.value = '';
+  textEl.value = '';
+  titleEl.value = '';
+  document.getElementById('s3').checked = true;
+  textEl.style.borderColor = '';
+
+  // Fetch AI reply
+  try {
+    const reply = await getAiReply(text, rating);
+    const replyContainer = document.getElementById('reply-' + comment.id);
+    const sentClass = getSentimentClass(rating);
+    replyContainer.innerHTML = `
+      <div class="ai-reply ${sentClass}">
+        <div class="ai-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2">
+            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+          </svg>
+        </div>
+        <div class="ai-reply-content">
+          <div class="ai-reply-label">Aura Support · AI Response</div>
+          <div class="ai-reply-text">${reply}</div>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    const replyContainer = document.getElementById('reply-' + comment.id);
+    replyContainer.innerHTML = `
+      <div class="ai-reply neutral">
+        <div class="ai-reply-content">
+          <div class="ai-reply-label">Aura Support</div>
+          <div class="ai-reply-text" style="color:#8B2020;font-size:0.8rem;">
+            Could not reach API at <code>${getApiUrl()}</code>. Make sure uvicorn is running.
+          </div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+// Enter to submit (Ctrl+Enter in textarea)
+document.getElementById('input-comment').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) submitComment();
+});
+
+// Check API status on load and on URL change
+checkApiStatus();
+document.getElementById('api-url').addEventListener('change', checkApiStatus);
+setInterval(checkApiStatus, 15000);
+</script>
+
+</body>
+</html>
