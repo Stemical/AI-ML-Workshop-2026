@@ -557,18 +557,17 @@
   </div>
 </section>
 
-<!-- Ollama status widget -->
+<!-- API Config widget -->
 <div class="api-config">
-  <div class="api-config-title">Ollama</div>
+  <div class="api-config-title">API Connection</div>
   <div class="api-config-row">
     <div class="api-status" id="api-status"></div>
-    <span style="font-size:0.78rem;color:var(--ink-light)">localhost:11434 · llama3.2</span>
+    <input class="api-config-input" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000" />
   </div>
 </div>
 
 <script>
 const PRODUCT_NAME = "Aura Pro Wireless";
-const OLLAMA_MODEL = "llama3.2"; // change to any model you have installed
 const AVATAR_COLORS = [
   {bg:'#EAF3EE', text:'#2D6A4F'},
   {bg:'#EAF1FB', text:'#1A4D8F'},
@@ -579,10 +578,14 @@ const AVATAR_COLORS = [
 
 let comments = [];
 
+function getApiUrl() {
+  return document.getElementById('api-url').value.trim().replace(/\/$/, '');
+}
+
 async function checkApiStatus() {
   const statusDot = document.getElementById('api-status');
   try {
-    const res = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) });
+    const res = await fetch(getApiUrl() + '/health', { signal: AbortSignal.timeout(3000) });
     statusDot.className = 'api-status ' + (res.ok ? 'online' : 'offline');
   } catch {
     statusDot.className = 'api-status offline';
@@ -591,29 +594,33 @@ async function checkApiStatus() {
 
 async function getAiReply(comment, rating) {
   const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'mixed';
+  const prompt = `You are a warm, professional customer support representative for "${PRODUCT_NAME}", a premium wireless headphone.
 
-  const res = await fetch('http://localhost:11434/api/chat', {
+A customer just left this ${sentiment} review (${rating}/5 stars):
+"${comment}"
+
+Write a SHORT reply (2-3 sentences max) that:
+- Acknowledges their specific experience
+- If positive (4-5 stars): express genuine gratitude and share their excitement
+- If negative (1-2 stars): sincerely apologize and offer to help resolve the issue
+- If mixed (3 stars): acknowledge both positives and offer to improve their experience
+- Sound human, warm, and brand-appropriate. Do NOT use generic phrases like "We're sorry for any inconvenience."
+
+Reply directly without any prefix like "Reply:" or "Response:".`;
+
+  const res = await fetch(getApiUrl() + '/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: OLLAMA_MODEL,
-      stream: false,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a customer support rep for Aura Pro Wireless headphones. Reply in 1-2 sentences only. Be warm and genuine. No filler phrases.'
-        },
-        {
-          role: 'user',
-          content: `Customer left a ${sentiment} review (${rating}/5 stars): "${comment}"`
-        }
-      ]
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 120,
+      temperature: 0.75
     })
   });
 
-  if (!res.ok) throw new Error('Ollama error');
+  if (!res.ok) throw new Error('API error');
   const data = await res.json();
-  return data.message.content;
+  return data.reply;
 }
 
 function getSentimentClass(rating) {
@@ -752,7 +759,7 @@ async function submitComment() {
         <div class="ai-reply-content">
           <div class="ai-reply-label">Aura Support</div>
           <div class="ai-reply-text" style="color:#8B2020;font-size:0.8rem;">
-            Could not reach Ollama. Make sure it is running: <code>ollama serve</code>
+            Could not reach API at <code>${getApiUrl()}</code>. Make sure uvicorn is running.
           </div>
         </div>
       </div>
@@ -765,7 +772,9 @@ document.getElementById('input-comment').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.ctrlKey) submitComment();
 });
 
+// Check API status on load and on URL change
 checkApiStatus();
+document.getElementById('api-url').addEventListener('change', checkApiStatus);
 setInterval(checkApiStatus, 15000);
 </script>
 
