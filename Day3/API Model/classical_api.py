@@ -1,17 +1,12 @@
 """
-Spam Detector + AI Reply API
+Spam Detector API
 Run with: waitress-serve --port=5000 classical_api:app
+Test:     curl -X POST http://localhost:5000/predict -H "Content-Type: application/json" -d "{\"message\": \"Win a free prize now!\"}"
 """
 
-import os
 import pickle
 from pathlib import Path
-
-from dotenv import load_dotenv
 from flask import Flask, request, jsonify
-from openai import OpenAI
-
-load_dotenv(Path(__file__).parent / ".env")
 
 # spam_detector.pkl lives one level up (Day3/), not inside Day3/API Model/
 MODEL_PATH = Path(__file__).parent.parent / "spam_detector.pkl"
@@ -28,30 +23,22 @@ with open(MODEL_PATH, "rb") as f:
 app = Flask(__name__)
 
 
-@app.after_request
-def add_cors(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return response
-
-
-@app.route("/predict", methods=["POST", "OPTIONS"])
+@app.route("/predict", methods=["POST"])
 def predict():
-    if request.method == "OPTIONS":
-        return "", 204
-
     data = request.get_json(force=True, silent=True)
+
     if not data:
         return jsonify({"error": "Request body must be valid JSON."}), 400
 
     message = data.get("message", "").strip()
+
     if not message:
         return jsonify({"error": "Field 'message' is required and cannot be empty."}), 400
 
     try:
         probs = model.predict_proba([message])[0]
         label = "spam" if model.predict([message])[0] == 1 else "ham"
+
         return jsonify({
             "message": message,
             "prediction": label,
@@ -62,32 +49,6 @@ def predict():
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
 
-@app.route("/chat", methods=["POST", "OPTIONS"])
-def chat():
-    if request.method == "OPTIONS":
-        return "", 204
-
-    api_key = os.getenv("OPENAI_API_KEY", "")
-    if not api_key or api_key == "your-new-key-here":
-        return jsonify({"error": "OPENAI_API_KEY not set in .env"}), 500
-
-    data = request.get_json(force=True, silent=True)
-    if not data:
-        return jsonify({"error": "Request body must be valid JSON."}), 400
-
-    try:
-        client = OpenAI(api_key=api_key)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=data.get("messages", []),
-            max_tokens=data.get("max_tokens", 120),
-            temperature=data.get("temperature", 0.75),
-        )
-        return jsonify({"reply": response.choices[0].message.content})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "model": "TF-IDF + MultinomialNB"})
@@ -96,14 +57,35 @@ def health():
 @app.route("/", methods=["GET"])
 def index():
     return jsonify({
-        "service": "Spam Detector + AI Reply API",
+        "service": "Spam Detector API",
         "endpoints": {
             "POST /predict": "Classify a message as spam or ham",
-            "POST /chat": "Get a ChatGPT reply (requires OPENAI_API_KEY in .env)",
             "GET /health": "Health check",
+        },
+        "example": {
+            "url": "POST /predict",
+            "body": {"message": "You have won a free prize! Call now"},
         },
     })
 
 
 if __name__ == "__main__":
+    print("Starting Spam Detector API...")
+    print("API running at http://localhost:5000")
+    print()
+    print("Endpoints:")
+    print("  GET  /        - API info")
+    print("  GET  /health  - Health check")
+    print("  POST /predict - Classify a message")
+    print()
+    print("Test with curl:")
+    print('  curl -X POST http://localhost:5000/predict \\')
+    print('       -H "Content-Type: application/json" \\')
+    print('       -d \'{"message": "You have won a free prize! Call now"}\'')
+    print()
+    print("Press CTRL+C to stop the server.")
+    print("-" * 50)
+
     app.run(host="0.0.0.0", port=5000, debug=False)
+
+# run using: waitress-serve --port=5000 classical_api:app

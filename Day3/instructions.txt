@@ -1,0 +1,5 @@
+# to run the ollama api ( this runs the html product demo as well) - run the ollama_bridge.py
+# to run the classical model -  run the classical_api.py
+# to get ollama to work
+$env:OLLAMA_ORIGINS="*"
+ollama serve
