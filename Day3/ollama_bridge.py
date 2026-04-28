@@ -133,3 +133,4 @@ def root():
         },
         "default_model": DEFAULT_MODEL,
     }
+#  uvicorn ollama_bridge:app --port 8000 --reload

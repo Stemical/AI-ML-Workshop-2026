@@ -20,6 +20,8 @@
     --success-bg: #EAF3EE;
     --error: #8B2020;
     --error-bg: #F8EEEE;
+    --openai: #10A37F;
+    --openai-bg: #E8F6F1;
     --radius: 12px;
   }
 
@@ -354,7 +356,7 @@
     margin-bottom: 1rem;
   }
 
-  /* ── AI REPLY ── */
+  /* ── AI REPLY (shared) ── */
   .ai-reply {
     border-radius: 8px;
     padding: 1rem 1.1rem;
@@ -363,21 +365,24 @@
     align-items: flex-start;
     margin-top: 0.5rem;
   }
-  .ai-reply.positive { background: var(--success-bg); border-left: 2px solid var(--success); }
-  .ai-reply.negative { background: var(--error-bg); border-left: 2px solid var(--error); }
-  .ai-reply.neutral { background: var(--gold-light); border-left: 2px solid var(--gold); }
+  .ai-reply.ollama { background: var(--gold-light); border-left: 2px solid var(--gold); }
+  .ai-reply.openai { background: var(--openai-bg); border-left: 2px solid var(--openai); }
+  .ai-reply.error { background: var(--error-bg); border-left: 2px solid var(--error); }
+
   .ai-icon {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: var(--ink);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     margin-top: 1px;
   }
+  .ai-icon.ollama { background: var(--ink); }
+  .ai-icon.openai { background: var(--openai); }
   .ai-icon svg { width: 12px; height: 12px; }
+
   .ai-reply-content { flex: 1; }
   .ai-reply-label {
     font-size: 0.68rem;
@@ -444,18 +449,9 @@
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    margin-bottom: 0.4rem;
   }
-  .api-config-input {
-    flex: 1;
-    padding: 0.4rem 0.6rem;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    font-size: 0.78rem;
-    font-family: 'DM Sans', sans-serif;
-    outline: none;
-    color: var(--ink);
-    background: var(--cream);
-  }
+  .api-config-row:last-child { margin-bottom: 0; }
   .api-status {
     width: 8px;
     height: 8px;
@@ -543,7 +539,7 @@
 
     <div class="form-footer">
       <div class="api-note">
-        <span></span>AI will respond to your comment
+        <span></span>Ollama &amp; ChatGPT will both respond — compare them
       </div>
       <button class="btn-primary" onclick="submitComment()">Post Review</button>
     </div>
@@ -557,17 +553,26 @@
   </div>
 </section>
 
-<!-- API Config widget -->
+<!-- API status widget -->
 <div class="api-config">
-  <div class="api-config-title">API Connection</div>
+  <div class="api-config-title">AI Status</div>
   <div class="api-config-row">
-    <div class="api-status" id="api-status"></div>
-    <input class="api-config-input" id="api-url" value="http://localhost:8000" placeholder="http://localhost:8000" />
+    <div class="api-status" id="api-status-ollama"></div>
+    <span style="font-size:0.78rem;color:var(--ink-light)">Ollama · localhost:11434</span>
+  </div>
+  <div class="api-config-row">
+    <div class="api-status" id="api-status-openai"></div>
+    <span style="font-size:0.78rem;color:var(--ink-light)">ChatGPT · localhost:8000</span>
   </div>
 </div>
 
 <script>
 const PRODUCT_NAME = "Aura Pro Wireless";
+const OLLAMA_MODEL = "gemma3:1b";                            // model you have pulled
+const OPENAI_BRIDGE_URL = "http://localhost:8000";           // your openai_bridge.py
+
+const SYSTEM_PROMPT = "You are a customer support rep for Aura Pro Wireless headphones. Reply in 1-2 sentences only. Be warm and genuine. No filler phrases.";
+
 const AVATAR_COLORS = [
   {bg:'#EAF3EE', text:'#2D6A4F'},
   {bg:'#EAF1FB', text:'#1A4D8F'},
@@ -578,57 +583,73 @@ const AVATAR_COLORS = [
 
 let comments = [];
 
-function getApiUrl() {
-  return document.getElementById('api-url').value.trim().replace(/\/$/, '');
-}
-
-async function checkApiStatus() {
-  const statusDot = document.getElementById('api-status');
+// ─── Status checks ──────────────────────────────────────────────
+async function checkOllamaStatus() {
+  const dot = document.getElementById('api-status-ollama');
   try {
-    const res = await fetch(getApiUrl() + '/health', { signal: AbortSignal.timeout(3000) });
-    statusDot.className = 'api-status ' + (res.ok ? 'online' : 'offline');
+    const res = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(2000) });
+    dot.className = 'api-status ' + (res.ok ? 'online' : 'offline');
   } catch {
-    statusDot.className = 'api-status offline';
+    dot.className = 'api-status offline';
   }
 }
 
-async function getAiReply(comment, rating) {
+async function checkOpenAIStatus() {
+  const dot = document.getElementById('api-status-openai');
+  try {
+    const res = await fetch(`${OPENAI_BRIDGE_URL}/health`, { signal: AbortSignal.timeout(2000) });
+    const data = await res.json();
+    dot.className = 'api-status ' + (data.status === 'ok' ? 'online' : 'offline');
+  } catch {
+    dot.className = 'api-status offline';
+  }
+}
+
+function checkAllApis() {
+  checkOllamaStatus();
+  checkOpenAIStatus();
+}
+
+// ─── AI calls ───────────────────────────────────────────────────
+async function getOllamaReply(comment, rating) {
   const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'mixed';
-  const prompt = `You are a warm, professional customer support representative for "${PRODUCT_NAME}", a premium wireless headphone.
-
-A customer just left this ${sentiment} review (${rating}/5 stars):
-"${comment}"
-
-Write a SHORT reply (2-3 sentences max) that:
-- Acknowledges their specific experience
-- If positive (4-5 stars): express genuine gratitude and share their excitement
-- If negative (1-2 stars): sincerely apologize and offer to help resolve the issue
-- If mixed (3 stars): acknowledge both positives and offer to improve their experience
-- Sound human, warm, and brand-appropriate. Do NOT use generic phrases like "We're sorry for any inconvenience."
-
-Reply directly without any prefix like "Reply:" or "Response:".`;
-
-  const res = await fetch(getApiUrl() + '/chat', {
+  const res = await fetch('http://localhost:11434/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 120,
-      temperature: 0.75
+      model: OLLAMA_MODEL,
+      stream: false,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: `Customer left a ${sentiment} review (${rating}/5 stars): "${comment}"` }
+      ]
     })
   });
+  if (!res.ok) throw new Error('Ollama error');
+  const data = await res.json();
+  return data.message.content;
+}
 
-  if (!res.ok) throw new Error('API error');
+async function getOpenAIReply(comment, rating) {
+  const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'mixed';
+  const res = await fetch(`${OPENAI_BRIDGE_URL}/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: `Customer left a ${sentiment} review (${rating}/5 stars): "${comment}"` }
+      ],
+      max_tokens: 150,
+      temperature: 0.7
+    })
+  });
+  if (!res.ok) throw new Error('OpenAI bridge error');
   const data = await res.json();
   return data.reply;
 }
 
-function getSentimentClass(rating) {
-  if (rating >= 4) return 'positive';
-  if (rating <= 2) return 'negative';
-  return 'neutral';
-}
-
+// ─── Helpers ────────────────────────────────────────────────────
 function getInitials(name) {
   return name.trim().split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
 }
@@ -649,10 +670,49 @@ function updateCounts() {
     : `${n} review${n !== 1 ? 's' : ''}`;
 }
 
+function loadingBlock(provider, label) {
+  return `
+    <div class="ai-reply ${provider}">
+      <div class="ai-icon ${provider}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="${provider === 'ollama' ? '#C9A84C' : '#FFFFFF'}" stroke-width="2">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
+      </div>
+      <div class="ai-reply-content">
+        <div class="ai-reply-label">${label}</div>
+        <div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+    </div>`;
+}
+
+function replyBlock(provider, label, text) {
+  return `
+    <div class="ai-reply ${provider}">
+      <div class="ai-icon ${provider}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="${provider === 'ollama' ? '#C9A84C' : '#FFFFFF'}" stroke-width="2">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
+      </div>
+      <div class="ai-reply-content">
+        <div class="ai-reply-label">${label}</div>
+        <div class="ai-reply-text">${text}</div>
+      </div>
+    </div>`;
+}
+
+function errorBlock(label, message) {
+  return `
+    <div class="ai-reply error">
+      <div class="ai-reply-content">
+        <div class="ai-reply-label">${label}</div>
+        <div class="ai-reply-text" style="color:#8B2020;font-size:0.8rem;">${message}</div>
+      </div>
+    </div>`;
+}
+
 function createCommentCard(c) {
   const colorIdx = c.id % AVATAR_COLORS.length;
   const col = AVATAR_COLORS[colorIdx];
-  const sentClass = getSentimentClass(c.rating);
 
   const card = document.createElement('div');
   card.className = 'comment-card';
@@ -670,25 +730,13 @@ function createCommentCard(c) {
     </div>
     ${c.title ? `<div style="font-weight:500;font-size:0.88rem;margin-bottom:0.5rem;">${c.title}</div>` : ''}
     <p class="comment-text">${c.text}</p>
-    <div id="reply-${c.id}">
-      <div class="ai-reply ${sentClass}">
-        <div class="ai-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
-          </svg>
-        </div>
-        <div class="ai-reply-content">
-          <div class="ai-reply-label">Aura Support · AI Response</div>
-          <div class="ai-loading">
-            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <div id="reply-ollama-${c.id}">${loadingBlock('ollama', 'Aura Support · Ollama (' + OLLAMA_MODEL + ')')}</div>
+    <div id="reply-openai-${c.id}">${loadingBlock('openai', 'Aura Support · ChatGPT')}</div>
   `;
   return card;
 }
 
+// ─── Submit ─────────────────────────────────────────────────────
 async function submitComment() {
   const nameEl = document.getElementById('input-name');
   const textEl = document.getElementById('input-comment');
@@ -706,24 +754,14 @@ async function submitComment() {
     return;
   }
 
-  const comment = {
-    id: Date.now(),
-    name,
-    title: titleEl.value.trim(),
-    text,
-    rating,
-    date: formatDate(),
-  };
-
+  const comment = { id: Date.now(), name, title: titleEl.value.trim(), text, rating, date: formatDate() };
   comments.unshift(comment);
   updateCounts();
 
-  // Clear empty state
   const list = document.getElementById('comments-list');
   const empty = list.querySelector('.empty-state');
   if (empty) empty.remove();
 
-  // Render card
   const card = createCommentCard(comment);
   list.insertBefore(card, list.firstChild);
 
@@ -734,48 +772,40 @@ async function submitComment() {
   document.getElementById('s3').checked = true;
   textEl.style.borderColor = '';
 
-  // Fetch AI reply
-  try {
-    const reply = await getAiReply(text, rating);
-    const replyContainer = document.getElementById('reply-' + comment.id);
-    const sentClass = getSentimentClass(rating);
-    replyContainer.innerHTML = `
-      <div class="ai-reply ${sentClass}">
-        <div class="ai-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2">
-            <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
-          </svg>
-        </div>
-        <div class="ai-reply-content">
-          <div class="ai-reply-label">Aura Support · AI Response</div>
-          <div class="ai-reply-text">${reply}</div>
-        </div>
-      </div>
-    `;
-  } catch (e) {
-    const replyContainer = document.getElementById('reply-' + comment.id);
-    replyContainer.innerHTML = `
-      <div class="ai-reply neutral">
-        <div class="ai-reply-content">
-          <div class="ai-reply-label">Aura Support</div>
-          <div class="ai-reply-text" style="color:#8B2020;font-size:0.8rem;">
-            Could not reach API at <code>${getApiUrl()}</code>. Make sure uvicorn is running.
-          </div>
-        </div>
-      </div>
-    `;
-  }
+  // Fire both AI calls in PARALLEL
+  const ollamaSlot = document.getElementById('reply-ollama-' + comment.id);
+  const openaiSlot = document.getElementById('reply-openai-' + comment.id);
+
+  getOllamaReply(text, rating)
+    .then(reply => {
+      ollamaSlot.innerHTML = replyBlock('ollama', 'Aura Support · Ollama (' + OLLAMA_MODEL + ')', reply);
+    })
+    .catch(() => {
+      ollamaSlot.innerHTML = errorBlock(
+        'Aura Support · Ollama',
+        'Could not reach Ollama. Make sure it is running: <code>ollama serve</code>'
+      );
+    });
+
+  getOpenAIReply(text, rating)
+    .then(reply => {
+      openaiSlot.innerHTML = replyBlock('openai', 'Aura Support · ChatGPT', reply);
+    })
+    .catch(() => {
+      openaiSlot.innerHTML = errorBlock(
+        'Aura Support · ChatGPT',
+        'Could not reach OpenAI bridge. Make sure it is running: <code>uvicorn openai_bridge:app --port 8000</code>'
+      );
+    });
 }
 
-// Enter to submit (Ctrl+Enter in textarea)
+// Ctrl+Enter to submit
 document.getElementById('input-comment').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.ctrlKey) submitComment();
 });
 
-// Check API status on load and on URL change
-checkApiStatus();
-document.getElementById('api-url').addEventListener('change', checkApiStatus);
-setInterval(checkApiStatus, 15000);
+checkAllApis();
+setInterval(checkAllApis, 15000);
 </script>
 
 </body>
